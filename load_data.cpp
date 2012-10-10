@@ -3,10 +3,12 @@
 
 // Root
 #include <TApplication.h>
-#include <TH2.h>
-#include <TChain.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+
+#include <TH3F.h>
+#include <TH2.h>
+#include <TChain.h>
 
 // Custom
 // #include "DataClass.h"
@@ -29,31 +31,35 @@ void load_data() {
   // chain.MakeClass("DataClass");
 
   long long int entry_count = chain.GetEntries();
-  cout << entry_count << endl;
+  // cout << entry_count << endl;
 
-  chain.Show(0); // Show values of an Entry $i
+  // chain.Show(0); // Show values of an Entry $i
 
   // vector<float>* mu_muid_x = 0;
-  // vector<float>* temp = 0;
-  // vector<float>* temp = 0;
-  // chain.SetBranchAddress("mu_muid_pt", &temp);
+  vector< vector<float> >* mu_muid_CaloCell_x = 0;
+  vector< vector<float> >* mu_muid_CaloCell_y = 0;
+  vector< vector<float> >* mu_muid_CaloCell_z = 0;
+  chain.SetBranchAddress("mu_muid_CaloCell_x", &mu_muid_CaloCell_x);
+  chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
+  chain.SetBranchAddress("mu_muid_CaloCell_z", &mu_muid_CaloCell_z);
 
-
-  int j = 0; // This was just to check whether we actually iterate through all Entries - and we do! (see line 46)
-
+  TH3F* calo_hist = new TH3F("lol", "lol", 20, -4000, 4000, 20, -4000, 4000, 20, -4000, 4000);
 
   // NOTE: This takes quite a while: 3.68 GiB of data has to seep through this
   //       code.
  
-  for (int i = 0; i < entry_count; i++) {
-    // int itree = chain.LoadTree(i); // Load the tree containing Entry $i - this doesn't make sense - why doesn't GetEntry do this
-    // if (itree == NULL) { cout << "fail" << endl; break; }
-    chain.GetEntry(i); // GetEntry returns number of bytes read
+  // for (int i = 0; i < entry_count; i++) {
+  for (int i_entry = 0; i_entry < 1; i_entry++) {
+    chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
-    // cout << (*temp).size() << endl;
-    j++;
+    for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
+      for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
+        cout << (*mu_muid_CaloCell_x)[i_muon][i_cell] << endl;
+        calo_hist->Fill((*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
+      }
+    }
   }
-  cout << j << endl; // j == entry_count == 60699
+  calo_hist->Draw("*");
 
   // chain.Draw("mu_muid_beta", "mu_muid_beta > -1");
   // chain.Draw("mu_muid_pt");
