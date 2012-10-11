@@ -48,9 +48,11 @@ void load_data() {
   vector< vector<float> >* mu_muid_CaloCell_x = 0;
   vector< vector<float> >* mu_muid_CaloCell_y = 0;
   vector< vector<float> >* mu_muid_CaloCell_z = 0;
+  vector< vector<float> >* mu_muid_CaloCell_t = 0;
   chain.SetBranchAddress("mu_muid_CaloCell_x", &mu_muid_CaloCell_x);
   chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
   chain.SetBranchAddress("mu_muid_CaloCell_z", &mu_muid_CaloCell_z);
+  chain.SetBranchAddress("mu_muid_CaloCell_t", &mu_muid_CaloCell_t);
 
   // NOTE: This takes quite a while: 3.68 GiB of data has to seep through this
   //       code.
@@ -87,6 +89,7 @@ void load_data() {
       line->SetPoint(0, 0.0, 0.0, 0.0);
       line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
       line->Draw();
+	  
     }
   }
   //Kommentar
