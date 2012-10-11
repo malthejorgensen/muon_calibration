@@ -3,8 +3,11 @@
 
 // Root
 #include <TApplication.h>
+#include <TView3D.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TPolyMarker3D.h>
+#include <TPolyLine3D.h>
 
 #include <TH3F.h>
 #include <TH2.h>
@@ -36,6 +39,12 @@ void load_data() {
   // chain.Show(0); // Show values of an Entry $i
 
   // vector<float>* mu_muid_x = 0;
+  vector<float>* mu_muid_px = 0;
+  vector<float>* mu_muid_py = 0;
+  vector<float>* mu_muid_pz = 0;
+  chain.SetBranchAddress("mu_muid_px", &mu_muid_px);
+  chain.SetBranchAddress("mu_muid_py", &mu_muid_py);
+  chain.SetBranchAddress("mu_muid_pz", &mu_muid_pz);
   vector< vector<float> >* mu_muid_CaloCell_x = 0;
   vector< vector<float> >* mu_muid_CaloCell_y = 0;
   vector< vector<float> >* mu_muid_CaloCell_z = 0;
@@ -43,27 +52,49 @@ void load_data() {
   chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
   chain.SetBranchAddress("mu_muid_CaloCell_z", &mu_muid_CaloCell_z);
 
-  TH3F* calo_hist = new TH3F("lol", "lol", 20, -4000, 4000, 20, -4000, 4000, 20, -4000, 4000);
-
   // NOTE: This takes quite a while: 3.68 GiB of data has to seep through this
   //       code.
- 
+
+  TCanvas* c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,500,500);
+
+  TView3D* view = (TView3D*)(TView3D::CreateView());
+  // TView3D* view = new TView3D();
+  view->SetRange(-4000, -4000, -4000, 4000, 4000, 4000);
+  // view->DrawOutlineCube();
+  // view->SetOutlineToCube();
+  // view->ShowAxis();
+
+
   // for (int i = 0; i < entry_count; i++) {
-  for (int i_entry = 0; i_entry < 1; i_entry++) {
+  for (int i_entry = 6; i_entry < 7; i_entry++) {
     chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
     for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
+      TPolyMarker3D* markers = new TPolyMarker3D((*mu_muid_CaloCell_x)[i_muon].size());
+
+      // Draw calorimeter cells
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
         cout << (*mu_muid_CaloCell_x)[i_muon][i_cell] << endl;
-        calo_hist->Fill((*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
+        markers->SetPoint(i_cell, (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
       }
+      markers->SetMarkerSize(2);
+      markers->SetMarkerColor(4);
+      markers->SetMarkerStyle(2);
+      markers->Draw("A*");
+
+      // Draw momentum
+      TPolyLine3D* line = new TPolyLine3D((*mu_muid_CaloCell_x)[i_muon].size());
+      line->SetPoint(0, 0.0, 0.0, 0.0);
+      line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
+      line->Draw();
     }
   }
-  calo_hist->Draw("*");
+  // view->SetAxisNDC(-4000.0, 4000.0, -4000.0, 4000.0, -4000.0, 4000.0);
 
   // chain.Draw("mu_muid_beta", "mu_muid_beta > -1");
   // chain.Draw("mu_muid_pt");
 }
+
 
 int main(int argc, char* argv[]) {
 
