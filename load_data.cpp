@@ -2,8 +2,21 @@
 
 // C++
 #include <iostream>
+#include <vector>
+#include <vector>
+#include <vector>
+#include <vector>
+#include <vector>
+#include <vector>
+#include <vector>
+#include <vector>
+
 
 // Root
+#include <TROOT.h>
+#include <TInterpreter.h>
+#include <TChain.h>
+#include <TFile.h>
 #include <TApplication.h>
 #include <TView3D.h>
 #include <TStyle.h>
@@ -26,6 +39,12 @@ using namespace std;
 void load_data() {
   TChain chain("llp");
 
+
+  gInterpreter->GenerateDictionary("vector<vector<float> >");
+  // gInterpreter->GenerateDictionary("AttributeListLayout");
+  // gInterpreter->GenerateDictionary("pair<string, string>");
+  
+
   // Add files
   // chain.Add("Data/*.root");
   #ifdef _WIN32
@@ -40,21 +59,23 @@ void load_data() {
   // Make .h and .cpp file
   // chain.MakeClass("DataClass");
 
-  long long int entry_count = chain.GetEntries();
-  // cout << entry_count << endl;
+  int entry_count = chain.GetEntries();
+  cout << entry_count << endl;
+
 
   //chain.Show(0); // Show values of an Entry $i
   
   // vector<float>* mu_muid_x = 0;
-  vector<float>* mu_muid_px = 0;
-  vector<float>* mu_muid_py = 0;
-  vector<float>* mu_muid_pz = 0;
+  vector<float> *mu_muid_px = 0;
+  vector<float> *mu_muid_py = 0;
+  vector<float> *mu_muid_pz = 0;
+  vector<vector<float> > *mu_muid_CaloCell_x = 0;
+  vector<vector<float> > *mu_muid_CaloCell_y = 0;
+  vector<vector<float> > *mu_muid_CaloCell_z = 0;
   chain.SetBranchAddress("mu_muid_px", &mu_muid_px);
   chain.SetBranchAddress("mu_muid_py", &mu_muid_py);
   chain.SetBranchAddress("mu_muid_pz", &mu_muid_pz);
-  vector< vector<float> >* mu_muid_CaloCell_x = 0;
-  vector< vector<float> >* mu_muid_CaloCell_y = 0;
-  vector< vector<float> >* mu_muid_CaloCell_z = 0;
+
   //vector< vector<float> >* mu_muid_CaloCell_t = 0;
   chain.SetBranchAddress("mu_muid_CaloCell_x", &mu_muid_CaloCell_x);
   chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
@@ -79,7 +100,9 @@ void load_data() {
     chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
     for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
-      TPolyMarker3D* markers = new TPolyMarker3D((*mu_muid_CaloCell_x)[i_muon].size());
+      // TPolyMarker3D* markers = new TPolyMarker3D((Int_t)(*mu_muid_CaloCell_x)[i_muon].size());
+      TPolyMarker3D* markers = new TPolyMarker3D();
+      // cout << (*mu_muid_CaloCell_x)[i_muon].size() << endl;
 
       // Draw calorimeter cells
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
@@ -92,10 +115,10 @@ void load_data() {
       markers->Draw("A*");
 
       // Draw momentum
-      TPolyLine3D* line = new TPolyLine3D((*mu_muid_CaloCell_x)[i_muon].size());
-      line->SetPoint(0, 0.0, 0.0, 0.0);
-      line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
-      line->Draw();
+      // TPolyLine3D* line = new TPolyLine3D((*mu_muid_CaloCell_x)[i_muon].size());
+      // line->SetPoint(0, 0.0, 0.0, 0.0);
+      // line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
+      // line->Draw();
 	  
     }
   }
