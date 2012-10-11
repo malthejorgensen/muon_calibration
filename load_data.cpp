@@ -24,7 +24,7 @@ void load_data() {
 
   // Add files
   // chain.Add("Data/*.root");
-  chain.Add("Data/*001.llp.root"); // Test load only first file
+  chain.Add("../Data/*001.llp.root"); // Test load only first file
 
   // Disable unused branches
   chain.SetBranchStatus("*", 0); // Disable all branches
