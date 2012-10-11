@@ -69,24 +69,12 @@ void load_data() {
   for (int i_entry = 6; i_entry < 7; i_entry++) {
     chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
-    for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
-      TPolyMarker3D* markers = new TPolyMarker3D((*mu_muid_CaloCell_x)[i_muon].size());
+    for (int i_muon = 0; i_muon < (*mu_muid_CaloCell_x).size(); i_muon++) {
 
       // Draw calorimeter cells
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
-        cout << (*mu_muid_CaloCell_x)[i_muon][i_cell] << endl;
-        markers->SetPoint(i_cell, (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
+        // (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
       }
-      markers->SetMarkerSize(2);
-      markers->SetMarkerColor(4);
-      markers->SetMarkerStyle(2);
-      markers->Draw("A*");
-
-      // Draw momentum
-      TPolyLine3D* line = new TPolyLine3D((*mu_muid_CaloCell_x)[i_muon].size());
-      line->SetPoint(0, 0.0, 0.0, 0.0);
-      line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
-      line->Draw();
     }
   }
   // view->SetAxisNDC(-4000.0, 4000.0, -4000.0, 4000.0, -4000.0, 4000.0);
@@ -110,3 +98,27 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+
+// void draw_calocells() {
+//       TPolyMarker3D* markers = new TPolyMarker3D((*mu_muid_CaloCell_x)[i_muon].size());
+// 
+//       // Draw calorimeter cells
+//       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
+//         cout << (*mu_muid_CaloCell_x)[i_muon][i_cell] << endl;
+//         markers->SetPoint(i_cell, (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
+//       }
+//       markers->SetMarkerSize(2);
+//       markers->SetMarkerColor(4);
+//       markers->SetMarkerStyle(2);
+//       markers->Draw("A*");
+// 
+//       // Draw momentum
+//       TPolyLine3D* line = new TPolyLine3D((*mu_muid_CaloCell_x)[i_muon].size());
+//       line->SetPoint(0, 0.0, 0.0, 0.0);
+//       line->SetPoint(1, (*mu_muid_px)[i_muon]*0.04, (*mu_muid_py)[i_muon]*0.04, (*mu_muid_pz)[i_muon]*0.04);
+//       line->Draw();
+// 
+// }
+
+
