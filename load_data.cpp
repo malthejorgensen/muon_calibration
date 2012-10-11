@@ -76,7 +76,7 @@ void load_data() {
 
   // for (int i = 0; i < entry_count; i++) {
   for (int i_entry = 0; i_entry < 1; i_entry++) {
-    //chain.GetEntry(i_entry); // GetEntry returns number of bytes read
+    chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
     for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
       TPolyMarker3D* markers = new TPolyMarker3D((*mu_muid_CaloCell_x)[i_muon].size());
