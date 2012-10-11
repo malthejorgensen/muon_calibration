@@ -29,7 +29,7 @@ void load_data() {
   // Add files
   // chain.Add("Data/*.root");
   #ifdef _WIN32
-  chain.Add("E:/Dropbox/Anvendt Statistik - Projekt 2/muon_calibration/Data/*001.llp.root"); // Test load only first file
+  chain.Add("E:/Dropbox/Anvendt Statistik - Projekt 2/Data/*001.llp.root"); // Test load only first file
 #else
   chain.Add("../Data/*001.llp.root"); // Test load only first file
 #endif
@@ -43,8 +43,8 @@ void load_data() {
   long long int entry_count = chain.GetEntries();
   // cout << entry_count << endl;
 
-  chain.Show(0); // Show values of an Entry $i
-  return;
+  //chain.Show(0); // Show values of an Entry $i
+  
   // vector<float>* mu_muid_x = 0;
   vector<float>* mu_muid_px = 0;
   vector<float>* mu_muid_py = 0;
@@ -75,7 +75,7 @@ void load_data() {
 
 
   // for (int i = 0; i < entry_count; i++) {
-  for (int i_entry = 6; i_entry < 7; i_entry++) {
+  for (int i_entry = 0; i_entry < 1; i_entry++) {
     //chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
     for (int i_muon = 0; i_muon < 1 /* (*mu_muid_CaloCell_x).size() */; i_muon++) {
