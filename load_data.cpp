@@ -1,7 +1,12 @@
 // C++
 #include <iostream>
 
+// C
+#include <cmath>
+
 // Root
+#include <TROOT.h>
+#include <TInterpreter.h>
 #include <TApplication.h>
 #include <TView3D.h>
 #include <TStyle.h>
@@ -9,9 +14,15 @@
 #include <TPolyMarker3D.h>
 #include <TPolyLine3D.h>
 
+// Loading Root files
+#include <TChain.h>
+
+// 
 #include <TH3F.h>
 #include <TH2.h>
-#include <TChain.h>
+
+//
+#include <TVectorD.h>
 
 // Custom
 // #include "DataClass.h"
@@ -21,6 +32,9 @@ using namespace std;
 
 void load_data() {
   TChain chain("llp");
+
+
+  gInterpreter->GenerateDictionary("vector<vector<float> >");
 
   // Add files
   // chain.Add("Data/*.root");
@@ -48,9 +62,11 @@ void load_data() {
   vector< vector<float> >* mu_muid_CaloCell_x = 0;
   vector< vector<float> >* mu_muid_CaloCell_y = 0;
   vector< vector<float> >* mu_muid_CaloCell_z = 0;
+  vector< vector<float> >* mu_muid_CaloCell_t = 0;
   chain.SetBranchAddress("mu_muid_CaloCell_x", &mu_muid_CaloCell_x);
   chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
   chain.SetBranchAddress("mu_muid_CaloCell_z", &mu_muid_CaloCell_z);
+  chain.SetBranchAddress("mu_muid_CaloCell_t", &mu_muid_CaloCell_t);
 
   // NOTE: This takes quite a while: 3.68 GiB of data has to seep through this
   //       code.
@@ -65,6 +81,12 @@ void load_data() {
   // view->ShowAxis();
 
 
+  double last_time = 0;
+  TVectorD last_pos(3);
+
+  // TH3F* markers = new TH3F("CaloCell positions", "CaloCell positions", 1000, -4000, 4000, 1000, -4000, 4000, 1000, -4000, 4000);
+  TPolyMarker3D* markers = new TPolyMarker3D(9);
+
   // for (int i = 0; i < entry_count; i++) {
   for (int i_entry = 6; i_entry < 7; i_entry++) {
     chain.GetEntry(i_entry); // GetEntry returns number of bytes read
@@ -74,11 +96,31 @@ void load_data() {
       // Draw calorimeter cells
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
         // (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
+        double coords[] = { (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell] };
+        TVectorD current_pos(3, coords);
+        double current_time = (*mu_muid_CaloCell_t)[i_muon][i_cell];
+
+        current_pos.Print();
+        cout << current_time << endl;
+
+        markers->SetPoint(i_cell, current_pos[0], current_pos[1], current_pos[2]);
+
+        if (i_cell != 0) {
+          double beta = sqrt((last_pos - current_pos).Norm2Sqr()) / (last_time - current_time);
+          // cout << sqrt((last_pos - current_pos).Norm2Sqr()) << endl;
+          // cout << beta << endl;
+        }
+        last_pos = current_pos;
+        last_time = current_time;
       }
     }
   }
   // view->SetAxisNDC(-4000.0, 4000.0, -4000.0, 4000.0, -4000.0, 4000.0);
 
+  markers->SetMarkerSize(2);
+  markers->SetMarkerColor(4);
+  markers->SetMarkerStyle(2);
+  markers->Draw();
   // chain.Draw("mu_muid_beta", "mu_muid_beta > -1");
   // chain.Draw("mu_muid_pt");
 }
