@@ -38,8 +38,12 @@ void load_data() {
 
   // Add files
   // chain.Add("Data/*.root");
+  #ifdef _WIN32 // Windows path (Bjarke)
+  chain.Add("E:/Dropbox/Anvendt Statistik - Projekt 2/Data/group.phys-susy.108624_012981.EXT2._00001.llp.root");
+  cout << "Windows" << endl;
+  #else
   chain.Add("../Data/*001.llp.root"); // Test load only first file
-
+  #endif
   // Disable unused branches
   chain.SetBranchStatus("*", 0); // Disable all branches
   chain.SetBranchStatus("mu_muid*", 1); // Enable branches of interest
