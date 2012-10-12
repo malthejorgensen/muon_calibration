@@ -59,14 +59,35 @@ void load_data() {
   chain.SetBranchAddress("mu_muid_px", &mu_muid_px);
   chain.SetBranchAddress("mu_muid_py", &mu_muid_py);
   chain.SetBranchAddress("mu_muid_pz", &mu_muid_pz);
+  vector< vector<float> >* mu_muid_CaloCell_sampling = 0;
+  vector< vector<float> >* mu_muid_CaloCell_eta = 0;
+  vector< vector<float> >* mu_muid_CaloCell_phi = 0;
+  vector< vector<float> >* mu_muid_CaloCell_dr = 0;
+  vector< vector<float> >* mu_muid_CaloCell_E = 0;
+  vector< vector<float> >* mu_muid_CaloCell_t = 0;
   vector< vector<float> >* mu_muid_CaloCell_x = 0;
   vector< vector<float> >* mu_muid_CaloCell_y = 0;
   vector< vector<float> >* mu_muid_CaloCell_z = 0;
-  vector< vector<float> >* mu_muid_CaloCell_t = 0;
+  chain.SetBranchAddress("mu_muid_CaloCell_sampling", &mu_muid_CaloCell_sampling);
+  chain.SetBranchAddress("mu_muid_CaloCell_eta", &mu_muid_CaloCell_eta);
+  chain.SetBranchAddress("mu_muid_CaloCell_phi", &mu_muid_CaloCell_phi);
+  chain.SetBranchAddress("mu_muid_CaloCell_dr", &mu_muid_CaloCell_dr);
+  chain.SetBranchAddress("mu_muid_CaloCell_E", &mu_muid_CaloCell_E);
+  chain.SetBranchAddress("mu_muid_CaloCell_t", &mu_muid_CaloCell_t);
   chain.SetBranchAddress("mu_muid_CaloCell_x", &mu_muid_CaloCell_x);
   chain.SetBranchAddress("mu_muid_CaloCell_y", &mu_muid_CaloCell_y);
   chain.SetBranchAddress("mu_muid_CaloCell_z", &mu_muid_CaloCell_z);
-  chain.SetBranchAddress("mu_muid_CaloCell_t", &mu_muid_CaloCell_t);
+
+  // Timing
+  int* RunNumber = 0;
+  int* EventNumber = 0;
+  int* timestamp = 0;
+  int* timestamp_ns = 0;
+  chain.SetBranchAddress("RunNumber", &RunNumber);
+  chain.SetBranchAddress("EventNumber", &EventNumber);
+  chain.SetBranchAddress("timestamp", &timestamp);
+  chain.SetBranchAddress("timestamp_ns", &timestamp_ns);
+
 
   // NOTE: This takes quite a while: 3.68 GiB of data has to seep through this
   //       code.
@@ -110,8 +131,6 @@ void load_data() {
           // cout << sqrt((last_pos - current_pos).Norm2Sqr()) << endl;
           // cout << beta << endl;
         }
-        last_pos = current_pos;
-        last_time = current_time;
       }
     }
   }
