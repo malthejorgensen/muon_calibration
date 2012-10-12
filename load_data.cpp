@@ -103,7 +103,7 @@ void load_data() {
 
 
   double last_time = 0;
-  TVectorD last_pos(3);
+  TVectorD last_pos(3§);
 
   // TH3F* markers = new TH3F("CaloCell positions", "CaloCell positions", 1000, -4000, 4000, 1000, -4000, 4000, 1000, -4000, 4000);
   TPolyMarker3D* markers = new TPolyMarker3D(9);
@@ -121,14 +121,21 @@ void load_data() {
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
         double coords[] = { (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell] };
         TVectorD current_pos(3, coords);
+        double dist = sqrt(current_pos.Norm2Sqr()) / 100.0;
         double current_time = (*mu_muid_CaloCell_t)[i_muon][i_cell];
 
-        const double c = 1;
-        double calc_time = (*mu_muid_CaloCell_dr)[i_muon][i_cell] / c;
+        const double c = 2997924581; // Wikipedia value
+        double calc_time = dist / c;
+        double correct_time = (*mu_muid_CaloCell_t)[i_muon][i_cell] / 1000000000.0 + calc_time; // calc t=t'+d/c
 
-        current_pos.Print();
-        cout << current_time << endl;
+        //current_pos.Print();
+        //cout << calc_time << endl;
+        cout << dist << endl;
+        cout << correct_time << endl;
 
+        double beta = (dist / correct_time) / c;
+        
+        cout << "BETA " << beta << endl; //B = v / c 
 
       }
     }
