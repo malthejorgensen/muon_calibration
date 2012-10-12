@@ -108,40 +108,31 @@ void load_data() {
   // TH3F* markers = new TH3F("CaloCell positions", "CaloCell positions", 1000, -4000, 4000, 1000, -4000, 4000, 1000, -4000, 4000);
   TPolyMarker3D* markers = new TPolyMarker3D(9);
 
+  // Loop through entries
   // for (int i = 0; i < entry_count; i++) {
   for (int i_entry = 6; i_entry < 7; i_entry++) {
+
     chain.GetEntry(i_entry); // GetEntry returns number of bytes read
 
+    // Loop through mouns
     for (int i_muon = 0; i_muon < (*mu_muid_CaloCell_x).size(); i_muon++) {
 
-      // Draw calorimeter cells
+      // Loop through calorimeters
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
-        // (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell]);
         double coords[] = { (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell] };
         TVectorD current_pos(3, coords);
         double current_time = (*mu_muid_CaloCell_t)[i_muon][i_cell];
 
+        const double c = 1;
+        double calc_time = (*mu_muid_CaloCell_dr)[i_muon][i_cell] / c;
+
         current_pos.Print();
         cout << current_time << endl;
 
-        markers->SetPoint(i_cell, current_pos[0], current_pos[1], current_pos[2]);
 
-        if (i_cell != 0) {
-          double beta = sqrt((last_pos - current_pos).Norm2Sqr()) / (last_time - current_time);
-          // cout << sqrt((last_pos - current_pos).Norm2Sqr()) << endl;
-          // cout << beta << endl;
-        }
       }
     }
   }
-  // view->SetAxisNDC(-4000.0, 4000.0, -4000.0, 4000.0, -4000.0, 4000.0);
-
-  markers->SetMarkerSize(2);
-  markers->SetMarkerColor(4);
-  markers->SetMarkerStyle(2);
-  markers->Draw();
-  // chain.Draw("mu_muid_beta", "mu_muid_beta > -1");
-  // chain.Draw("mu_muid_pt");
 }
 
 
