@@ -103,7 +103,7 @@ void load_data() {
 
 
   double last_time = 0;
-  TVectorD last_pos(3§);
+  TVectorD last_pos(3);
 
   // TH3F* markers = new TH3F("CaloCell positions", "CaloCell positions", 1000, -4000, 4000, 1000, -4000, 4000, 1000, -4000, 4000);
   TPolyMarker3D* markers = new TPolyMarker3D(9);

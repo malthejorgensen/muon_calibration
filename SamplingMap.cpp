@@ -144,22 +144,31 @@ void SamplingMap(){
 for(int k = 0; k < zs.size(); k++){
   dr.push_back(sqrt(xs[k]*xs[k]+ys[k]*ys[k]));
 }
-TGraph* graph = new TGraph( zs.size(), &zs[0], &dr[0]);
-graph->Draw("AP");
 
-// Sampling maping
-for(int l = 0; l < samp.size(); l++){
-graph->SetMarkerStyle(21);
+    vector<TGraph*> graphs(30);
+    vector<int> counters(30);
+    for (int i = 0; i < 30; i++) {
+        graphs[i] = new TGraph( zs.size() );
+        counters[i] = 0;
+    }
 
-graph->GetXaxis()->SetTitle("z[mm]");
-graph->GetYaxis()->SetTitle("xy-plane[mm]");
+    // Sampling maping
+    for(int l = 0; l < samp.size(); l++){
+        TGraph* graph = graphs[samp[l]];
+        graph->SetPoint( counters[samp[l]], zs[l], dr[l]);
+        counters[samp[l]]++;
+    }
 
-graph->SetMarkerColor(samp[l]);
-graph->Draw("Same");
-
-graph->SetPoint( l, zs[l], dr[l]);
-
-}
+    graphs[19]->Draw("AP");
+    for (int i = 0; i < 21; i++) {
+        TGraph* graph = graphs[i];
+        graph->SetMarkerStyle(21);
+        graph->SetMarkerColor(i);
+        graph->SetTitle("Calo Cell Map");
+        graph->GetXaxis()->SetTitle("z[mm]");
+        graph->GetYaxis()->SetTitle("xy-plane[mm]");
+        graph->Draw("P same");
+    }
 }
 
 
