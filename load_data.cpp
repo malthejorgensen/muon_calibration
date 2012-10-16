@@ -13,6 +13,7 @@
 #include <TView3D.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <TGAxis.h>
 #include <TPolyMarker3D.h>
 #include <TPolyLine3D.h>
 
@@ -61,6 +62,10 @@ void load_data() {
   // chain.Show(0); // Show values of an Entry $i
 
   // vector<float>* mu_muid_x = 0;
+  vector<float>* mu_muid_beta = 0;
+  vector<float>* mu_muid_pt = 0;
+  chain.SetBranchAddress("mu_muid_beta", &mu_muid_beta);
+  chain.SetBranchAddress("mu_muid_pt", &mu_muid_pt);
   vector<float>* mu_muid_px = 0;
   vector<float>* mu_muid_py = 0;
   vector<float>* mu_muid_pz = 0;
@@ -104,8 +109,18 @@ void load_data() {
 
   stringstream name;
 
-  const int calo_count = 100;
+  const int calo_count = 20;
   vector<TH1F*> calo_beta_hists(calo_count + 1);
+  TH1F* calo_beta_hist = new TH1F("beta_hist", "beta_hist", 200, -10, 10);
+  TH1F* sampling_hist = new TH1F("sampling_hist", "sampling_hist", 21, -0.5, 20.5);
+  
+  vector<int> sampling_good(calo_count + 1, 0);
+  vector<int> sampling_bad(calo_count + 1, 0);
+
+  TH1F* energy_good = new TH1F("energy good", "energy good", 20, -200, 10000);
+  TH1F* energy_bad = new TH1F("energy bad", "energy bad", 20, -200, 10000);
+  TH1F* pt_good = new TH1F("pt good", "pt good", 20, -200, 10000);
+  TH1F* pt_bad = new TH1F("pt bad", "pt bad", 20, -200, 10000);
 
   for (int i_calo = 0; i_calo <= calo_count; i_calo++) {
     name << "calo cell" << i_calo;
@@ -115,9 +130,9 @@ void load_data() {
   }
 
 
-  vector< vector<double> > times(calo_count);
-  vector< vector<double> > betas(calo_count);
-  vector< vector<double> > energies(calo_count);
+  vector< vector<double> > times(calo_count + 1);
+  vector< vector<double> > betas(calo_count + 1);
+  vector< vector<double> > energies(calo_count + 1);
   TH2F* time_dist_hist = new TH2F("Time error vs. distance", "Time error vs. distance", 200, -30, 30, 200, 0, 8);
 
   set<unsigned int> runs;
@@ -139,6 +154,12 @@ void load_data() {
     for (int i_muon = 0; i_muon < (*mu_muid_CaloCell_x).size(); i_muon++) {
       //draw_calocells((*mu_muid_CaloCell_x)[i_muon], (*mu_muid_CaloCell_y)[i_muon], (*mu_muid_CaloCell_z)[i_muon]);
 
+      /******* SELECTION START *******/
+      //if ((*mu_muid_beta)[i_muon] < -900.0) { continue; } // Don't go through errornous 
+      //if ((*mu_muid_pt)[i_muon] < 12000.0) { continue; } // pt > 50 GeV
+      //if (RunNumber == 200804) { continue; }
+      /******** SELECTION END ********/
+
       // Loop through calorimeters
       for (int i_cell = 0; i_cell < (*mu_muid_CaloCell_x)[i_muon].size(); i_cell++) {
         double coords[] = { (*mu_muid_CaloCell_x)[i_muon][i_cell], (*mu_muid_CaloCell_y)[i_muon][i_cell], (*mu_muid_CaloCell_z)[i_muon][i_cell] };
@@ -155,15 +176,34 @@ void load_data() {
         time_dist_hist->Fill(atlas_time, dist);
 
         //current_pos.Print();
-        //cout << calc_time << endl;
-        //cout << dist << endl;
-        //cout << correct_time << endl;
+        if (i_entry < 3) {
+          cout << atlas_time << endl;
+          //cout << calc_time << endl;
+          //cout << dist << endl;
+          //cout << correct_time << endl;
+        }
 
         double beta = (dist / correct_time) / c;
 
         int cell_id = (*mu_muid_CaloCell_sampling)[i_muon][i_cell]; // sampling = cell_id
+        //if (cell_id != 1 && cell_id != 3) { continue; }
+        if (cell_id != 1) { continue; }
+        if ((*mu_muid_pt)[i_muon] > 9000) { continue; }
+        //if (cell_id > 10) { continue; }
         //cout << cell_id << endl;
         calo_beta_hists[cell_id]->Fill(beta);
+        calo_beta_hist->Fill(beta);
+
+        if (0.9 < beta && beta < 1.1 ) {
+          sampling_good[cell_id]++;
+          energy_good->Fill((*mu_muid_CaloCell_E)[i_muon][i_cell]);
+          pt_good->Fill((*mu_muid_pt)[i_muon]);
+          //sampling_hist->Fill(cell_id);
+        } else {
+          sampling_bad[cell_id]++;
+          energy_bad->Fill((*mu_muid_CaloCell_E)[i_muon][i_cell]);
+          pt_bad->Fill((*mu_muid_pt)[i_muon]);
+        }
 
         //cout << timestamp_ns << endl;
         times[cell_id].push_back(double(timestamp));
@@ -178,10 +218,49 @@ void load_data() {
   }
   cout << "Number of runs: " << runs.size() << endl;
 
-  time_dist_hist->Draw();
+  for (int i = 0; i < calo_count; i++) {
+    if (sampling_good[i] + sampling_bad[i] != 0) {
+      cout << sampling_bad[i] / double(sampling_good[i] + sampling_bad[i]) << endl;
+      sampling_hist->Fill(i, sampling_bad[i] / double(sampling_good[i] + sampling_bad[i]));
+    }
+  }
 
 
-  const int calo_cell_id1 = 15;
+  double sum = energy_bad->GetEntries() + energy_good->GetEntries();
+  for (int i = 0; i < energy_good->GetXaxis()->GetNbins(); i++) {
+    energy_good->SetBinContent(i, energy_bad->GetBinContent(i) + energy_good->GetBinContent(i));
+    energy_bad->SetBinContent(i, energy_bad->GetBinContent(i) / sum);
+  }
+  sum = pt_bad->GetEntries() + pt_good->GetEntries();
+  for (int i = 0; i < pt_good->GetXaxis()->GetNbins(); i++) {
+    pt_good->SetBinContent(i, pt_bad->GetBinContent(i) + pt_good->GetBinContent(i));
+    if (pt_bad->GetBinContent(i) + pt_good->GetBinContent(i) != 0) {
+      pt_bad->SetBinContent(i, pt_bad->GetBinContent(i) / (pt_bad->GetBinContent(i) + pt_good->GetBinContent(i)));
+    }
+  }
+
+  //time_dist_hist->Draw();
+  //calo_beta_hist->Draw();
+  TCanvas* canvas = new TCanvas("canvas", "blob", 10, 10, 500, 600);
+  pt_bad->Draw();
+
+
+  //scale hint1 to the pad coordinates
+  Float_t rightmax = 1.1*pt_good->GetMaximum();
+  Float_t scale = gPad->GetUymax()/rightmax;
+  pt_good->SetLineColor(kRed);
+  pt_good->Scale(scale);
+  pt_good->Draw("same");
+
+  //draw an axis on the right side
+  TGaxis *axis = new TGaxis(gPad->GetUxmax(),gPad->GetUymin(),
+        gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
+  axis->SetLineColor(kRed);
+  axis->SetLabelColor(kRed);
+  axis->Draw();
+  //sampling_hist->Draw();
+
+
   //const int window_size = 10;
   //double mean = 0;
   //double sum = 0;
@@ -202,16 +281,16 @@ void load_data() {
   //TGraph* time_graph = new TGraph(means[calo_cell_id1].size(), &times[calo_cell_id1][0], &means[calo_cell_id1][0]);
   //time_graph->Draw("LAP*");
 
-  //return;
+  return;
 
-  const int calo_cell_id2 = 16;
-  TCanvas* canvas = new TCanvas("canvas", "blob", 10, 10, 500, 600);
+  const int calo_cell_id1 = 12;
+  const int calo_cell_id2 = 13;
   canvas->Divide(1, 2);
   canvas->cd(1);
-  TGraph* time_graph1 = new TGraph(betas[calo_cell_id1].size(), &times[calo_cell_id1][0], &energies[calo_cell_id1][0]);
+  TGraph* time_graph1 = new TGraph(betas[calo_cell_id1].size(), &times[calo_cell_id1][0], &betas[calo_cell_id1][0]);
   time_graph1->Draw("AP*");
   canvas->cd(2);
-  TGraph* time_graph2 = new TGraph(betas[calo_cell_id2].size(), &times[calo_cell_id2][0], &energies[calo_cell_id2][0]);
+  TGraph* time_graph2 = new TGraph(betas[calo_cell_id2].size(), &times[calo_cell_id2][0], &betas[calo_cell_id2][0]);
   time_graph2->Draw("AP*");
   //calo_beta_hists[15]->Draw();
 }
