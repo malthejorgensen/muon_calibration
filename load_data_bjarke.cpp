@@ -1,3 +1,5 @@
+#if ( !defined(__CINT__) || defined(__MAKECINT__) )
+
 // C++
 #include <iostream>
 
@@ -26,7 +28,7 @@
 #include <TVectorD.h>
 
 // Custom
-
+#endif
 
 using namespace std;
 
