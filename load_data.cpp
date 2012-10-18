@@ -1,6 +1,8 @@
 // C++
 #include <iostream>
 #include <sstream>
+#include <limits>
+#include <algorithm>
 #include <set>
 
 // C
@@ -12,6 +14,7 @@
 #include <TApplication.h>
 #include <TView3D.h>
 #include <TStyle.h>
+#include <TPaveStats.h>
 #include <TCanvas.h>
 #include <TGAxis.h>
 #include <TPolyMarker3D.h>
@@ -31,6 +34,10 @@
 
 // Custom
 // #include "DataClass.h"
+
+double sqr(double x) {
+  return x*x;
+}
 
 using namespace std;
 
@@ -112,9 +119,11 @@ void load_data() {
 
   const int calo_count = 20;
   vector<TH1F*> calo_beta_hists(calo_count + 1);
-  TH1F* calo_beta_hist = new TH1F("beta_hist", "beta_hist", 200, -10, 10);
+  //TH1F* calo_beta_hist = new TH1F("beta_hist", "beta_hist", 200, -2, 10);
+  TH1F* calo_beta_hist = new TH1F("beta_hist", "beta_hist", 200, -2, 7);
+  TH1F* time_hist = new TH1F("time_hist", "time_hist", 200, -85, -50);
   TH1F* sampling_hist = new TH1F("sampling_hist", "sampling_hist", 21, -0.5, 20.5);
-  
+
   vector<int> sampling_good(calo_count + 1, 0);
   vector<int> sampling_bad(calo_count + 1, 0);
 
@@ -133,6 +142,18 @@ void load_data() {
   vector< vector<double> > betas(calo_count + 1);
   vector< vector<double> > energies(calo_count + 1);
   TH2F* time_dist_hist = new TH2F("Time error vs. distance", "Time error vs. distance", 200, -30, 30, 200, 0, 8);
+
+
+  int N = 0;
+  double sum = 0;
+  double sum_sq = 0;
+  double min_beta = numeric_limits<double>::max();
+  double max_beta = numeric_limits<double>::min();
+  double min_dist = numeric_limits<double>::max();
+  double max_dist = numeric_limits<double>::min();
+  double min_time = numeric_limits<double>::max();
+  double max_time = numeric_limits<double>::min();
+
 
   set<unsigned int> runs;
 
@@ -155,7 +176,7 @@ void load_data() {
 
       /******* SELECTION START *******/
       //if ((*mu_muid_beta)[i_muon] < -900.0) { continue; } // Don't go through errornous 
-      //if ((*mu_muid_pt)[i_muon] < 12000.0) { continue; } // pt > 50 GeV
+      //if ((*mu_muid_pt)[i_muon] < 12000.0) { continue; } // pt > 12 GeV
       //if (RunNumber == 200804) { continue; }
       /******** SELECTION END ********/
 
@@ -170,7 +191,9 @@ void load_data() {
         /******** CUT ********/
         // times that are identically zero doesn't make sense
         if (atlas_time == 0) { continue; }
-        //if ((*mu_muid_CaloCell_E)[i_muon][i_cell] < 200) { continue; }
+        if (atlas_time < -20) { continue; }
+        if (atlas_time > 20) { continue; }
+        if ((*mu_muid_CaloCell_E)[i_muon][i_cell] < 200) { continue; }
         /****** END CUT ******/
 
         const double c = 299792458.1; // Wikipedia value
@@ -207,6 +230,20 @@ void load_data() {
         betas[cell_id].push_back(beta);
         energies[cell_id].push_back((*mu_muid_CaloCell_E)[i_muon][i_cell]);
 
+        if (beta < -2 || beta > 7) { continue; }
+
+        N++;
+        sum += beta;
+        sum_sq += sqr(beta);
+
+        min_beta = min(min_beta, beta);
+        max_beta = max(max_beta, beta);
+        min_dist = min(min_dist, dist);
+        max_dist = max(max_dist, dist);
+        min_time = min(min_time, atlas_time);
+        max_time = max(max_time, atlas_time);
+
+        time_hist->Fill(atlas_time);
 
         //cout << "BETA " << beta << endl; // B = v / c
 
@@ -215,8 +252,54 @@ void load_data() {
   }
   cout << "Number of runs: " << runs.size() << endl;
 
+
+  double average = sum / N;
+  double RMS = sqrt(sum_sq / N - sqr(average));
+  cout << "RMS: " << RMS << endl;
+  cout << "Average: " << average << endl;
+
+  cout << "Min " << min_beta << endl;
+  cout << "Max " << max_beta << endl;
+  cout << "Min " << min_dist << endl;
+  cout << "Max " << max_dist << endl;
+  cout << "Min " << min_time << endl;
+  cout << "Max " << max_time << endl;
+
+
   /***** START OVERALL BETA *****/
-  //calo_beta_hist->Draw();
+  //double stats[] = {N, N, sum, sum_sq};
+  //calo_beta_hist->PutStats(stats);
+  //calo_beta_hist->GetStats();
+  TCanvas* canvas = new TCanvas("canvas", "Beta", 10, 10, 500, 600);
+
+  //time_hist->Draw();
+
+  //return;
+
+  //calo_beta_hist->SetStats(false);
+  calo_beta_hist->Draw();
+
+
+  stringstream sstr;
+  //TPaveText *pt = new TPaveText(.75 * gPad->GetUxmax(), .1 * gPad->GetUymax(), .95 * gPad->GetUxmax(), .3 * gPad->GetUymax());
+  TPaveText *pt = new TPaveText();
+  sstr << "Entries: " << N;
+  pt->AddText(sstr.str().c_str());
+  sstr.str("");
+  sstr << "Average: " << average;
+  pt->AddText(sstr.str().c_str());
+  sstr.str("");
+  sstr << "RMS: " << RMS;
+  pt->AddText(sstr.str().c_str());
+  sstr.str("");
+  pt->SetX1NDC(.15);
+  pt->SetX2NDC(.35);
+  pt->SetY1NDC(.75);
+  pt->SetY2NDC(.95);
+  pt->Draw("same");
+
+
+  canvas->Update();
   /****** END OVERALL BETA ******/
 
   /***** START SINGLE BETA *****/
@@ -236,41 +319,40 @@ void load_data() {
 
 
   /****** START VARIABLE GOODNESS ******/
-  for (int i = 0; i <= var_good->GetXaxis()->GetNbins() + 1; i++) {
-    // Set $var_good histogram to be the number of entries
-    var_good->SetBinContent(i, var_bad->GetBinContent(i) + var_good->GetBinContent(i));
+  //for (int i = 0; i <= var_good->GetXaxis()->GetNbins() + 1; i++) {
+    //// Set $var_good histogram to be the number of entries
+    //var_good->SetBinContent(i, var_bad->GetBinContent(i) + var_good->GetBinContent(i));
 
-    //if (var_bad->GetBinContent(i) + var_good->GetBinContent(i) != 0) {
-    if (var_bad->GetBinContent(i) + var_good->GetBinContent(i) > 10) {
-      // Set $var_bad to be the fraction of bad vs total entries
-      var_bad->SetBinContent(i, var_bad->GetBinContent(i) / double(var_good->GetBinContent(i)));
-    } else {
-      var_bad->SetBinContent(i, 0);
-    }
-  }
+    ////if (var_bad->GetBinContent(i) + var_good->GetBinContent(i) != 0) {
+    //if (var_bad->GetBinContent(i) + var_good->GetBinContent(i) > 10) {
+      //// Set $var_bad to be the fraction of bad vs total entries
+      //var_bad->SetBinContent(i, var_bad->GetBinContent(i) / double(var_good->GetBinContent(i)));
+    //} else {
+      //var_bad->SetBinContent(i, 0);
+    //}
+  //}
 
-  // http://root.cern.ch/root/html/tutorials/hist/twoscales.C.html
-  TCanvas* canvas = new TCanvas("canvas", "Variable badness", 10, 10, 500, 600);
-  gStyle->SetOptStat(kFALSE);
+  //// http://root.cern.ch/root/html/tutorials/hist/twoscales.C.html
+  //TCanvas* canvas = new TCanvas("canvas", "Variable badness", 10, 10, 500, 600);
+  //gStyle->SetOptStat(kFALSE);
 
-  var_bad->Draw();
-  canvas->Update();
+  //var_bad->Draw();
+  //canvas->Update();
 
-  // Scale $var_good histogram to pad
-  Float_t rightmax = 1.1 * var_good->GetMaximum();
-  Float_t scale = gPad->GetUymax()/rightmax;
-  var_good->SetLineColor(kRed);
-  var_good->Scale(scale);
-  var_good->Draw("same");
+  //// Scale $var_good histogram to pad
+  //Float_t rightmax = 1.1 * var_good->GetMaximum();
+  //Float_t scale = gPad->GetUymax()/rightmax;
+  //var_good->SetLineColor(kRed);
+  //var_good->Scale(scale);
+  //var_good->Draw("same");
 
-  //draw an axis on the right side
-  cout << gPad->GetUxmin() << " " << gPad->GetUxmax() << endl;
-  cout << gPad->GetUymin() << " " << gPad->GetUymax() << endl;
-  TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(), gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
-  axis->SetLineColor(kRed);
-  axis->SetLabelColor(kRed);
-  axis->Draw();
-  //sampling_hist->Draw();
+  ////draw an axis on the right side
+  //cout << gPad->GetUxmin() << " " << gPad->GetUxmax() << endl;
+  //cout << gPad->GetUymin() << " " << gPad->GetUymax() << endl;
+  //TGaxis *axis = new TGaxis(gPad->GetUxmax(), gPad->GetUymin(), gPad->GetUxmax(), gPad->GetUymax(),0,rightmax,510,"+L");
+  //axis->SetLineColor(kRed);
+  //axis->SetLabelColor(kRed);
+  //axis->Draw();
   /******* END VARIABLE GOODNESS *******/
 
 

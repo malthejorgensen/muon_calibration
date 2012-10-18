@@ -34,6 +34,8 @@ using namespace std;
 
 void easy_load() {
 
+  TH1F* hit_hist = new TH1F("Calo cell hits", "Calo cell hits", 21, -0.5, 20.5);
+
   ifstream f("data.txt");
 
   while (!f.eof()) {
@@ -42,7 +44,7 @@ void easy_load() {
     int timestamp, timestamp_ns;
     double pt, px, py, pz, beta;
     double CaloCell_sampling, CaloCell_eta, CaloCell_phi, CaloCell_dr;
-    double CaloCell_E, CaloCell_x, CaloCell_y, CaloCell_z;
+    double CaloCell_E, CaloCell_t, CaloCell_x, CaloCell_y, CaloCell_z;
     double beta_calc;
 
 
@@ -60,13 +62,16 @@ void easy_load() {
         >> CaloCell_phi
         >> CaloCell_dr
         >> CaloCell_E
+        >> CaloCell_t
         >> CaloCell_x
         >> CaloCell_y
         >> CaloCell_z
         >> beta_calc;
 
-    cout << beta_calc;
+    hit_hist->Fill(CaloCell_sampling);
+
   }
+  hit_hist->Draw();
 
 }
 
